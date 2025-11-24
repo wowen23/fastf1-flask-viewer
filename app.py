@@ -11,7 +11,7 @@ import os
 app = Flask(__name__)
 
 # Database path (one level up from this folder)
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'f1_data.db')
+DB_PATH = os.path.join(os.path.dirname(__file__), 'f1_data.db')
 
 def get_db():
     """Get database connection"""
