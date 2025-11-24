@@ -1,0 +1,594 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session['event_name'] }} - {{ session['session_type'] }}{% endblock %}
+
+{% block content %}
+<h1>{{ session['event_name'] }} - {{ session['session_type'] }}</h1>
+
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <p class="mb-0 text-muted">
+            {{ session['location'] }}, {{ session['country'] }} |
+            Round {{ session['round_number'] }} |
+            {{ session['session_date'][:10] }}
+        </p>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" id="sessionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button"
+            role="tab">
+            <i class="bi bi-table"></i> Overview
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="progression-tab" data-bs-toggle="tab" data-bs-target="#progression" type="button"
+            role="tab">
+            <i class="bi bi-graph-up"></i> Race Progression
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="stints-tab" data-bs-toggle="tab" data-bs-target="#stints" type="button" role="tab">
+            <i class="bi bi-circle-fill"></i> Stint Analysis
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pace-tab" data-bs-toggle="tab" data-bs-target="#pace" type="button" role="tab">
+            <i class="bi bi-speedometer2"></i> Global Race Pace
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab">
+            <i class="bi bi-clipboard-data"></i> Stint Review
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content mt-3">
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Race Results</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Pos</th>
+                                    <th>Driver</th>
+                                    <th>Team</th>
+                                    <th>Grid</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td><strong>{{ result['position']|int if result['position'] else 'DNF' }}</strong>
+                                    </td>
+                                    <td>
+                                        <a href="/driver/{{ session['session_id'] }}/{{ result['driver_id'] }}"
+                                            class="text-decoration-none">
+                                            <span class="badge"
+                                                style="background-color: #{{ result['team_color'] }}; color: white;">
+                                                {{ result['driver_id'] }}
+                                            </span>
+                                            {{ result['broadcast_name'] }}
+                                        </a>
+                                    </td>
+                                    <td>{{ result['team_name'] }}</td>
+                                    <td>{{ result['grid_position']|int if result['grid_position'] else '-' }}</td>
+                                    <td>{{ result['points'] if result['points'] else '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Fastest Laps</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Pos</th>
+                                    <th>Driver</th>
+                                    <th>Best Lap</th>
+                                    <th>Avg</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in lap_stats %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td><strong>{{ stat['driver_id'] }}</strong></td>
+                                    <td>{{ '%d:%06.3f' | format((stat['fastest_lap'] // 60)|int, stat['fastest_lap'] %
+                                        60) }}</td>
+                                    <td class="text-muted">{{ '%d:%06.3f' | format((stat['avg_lap'] // 60)|int,
+                                        stat['avg_lap'] % 60) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Race Progression Tab -->
+    <div class="tab-pane fade" id="progression" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Race Progression - Position by Lap</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="lapRange" class="form-label">View Laps:</label>
+                    <select id="lapRange" class="form-select form-select-sm"
+                        style="width: auto; display: inline-block;">
+                        <option value="all">All Laps</option>
+                        <option value="0-10">Laps 1-10</option>
+                        <option value="10-20">Laps 11-20</option>
+                        <option value="20-30">Laps 21-30</option>
+                        <option value="30-40">Laps 31-40</option>
+                        <option value="40-50">Laps 41-50</option>
+                        <option value="50-60">Laps 51-60</option>
+                        <option value="60-999">Laps 61+</option>
+                    </select>
+                </div>
+                <canvas id="positionChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stint Analysis Tab -->
+    <div class="tab-pane fade" id="stints" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Stint Analysis - Tire Strategy</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="stintChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Race Pace Tab -->
+    <div class="tab-pane fade" id="pace" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Global Race Pace</h4>
+                <p class="mb-0 small">Median lap time across all drivers</p>
+            </div>
+            <div class="card-body">
+                <canvas id="paceChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stint Review Tab -->
+    <div class="tab-pane fade" id="review" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-clipboard-data"></i> Stint Review</h4>
+                <p class="mb-0 small">Click on a stint in Stint Analysis to review details, or browse all stints below
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Selected Stint Details -->
+                <div id="selectedStintDetails" style="display: none;">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <button class="btn btn-sm btn-secondary" onclick="clearSelectedStint()">
+                                <i class="bi bi-arrow-left"></i> Back to All Stints
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Stint Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Driver:</th>
+                                            <td id="stintDriver"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Stint Number:</th>
+                                            <td id="stintNumber"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tire Compound:</th>
+                                            <td id="stintCompound"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Laps:</th>
+                                            <td id="stintLaps"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Performance Metrics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Average Lap Time:</th>
+                                            <td id="stintAvg"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Median Lap Time:</th>
+                                            <td id="stintMedian"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Consistency (CV%):</th>
+                                            <td id="stintConsistency"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Lap Time Evolution</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="stintLapTimeChart" height="80"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Stints List -->
+                <div id="allStintsList">
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-hover table-sm">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>Driver</th>
+                                    <th>Stint #</th>
+                                    <th>Compound</th>
+                                    <th>Laps</th>
+                                    <th>Avg Lap Time</th>
+                                    <th>Median Lap Time</th>
+                                    <th>Consistency</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stintsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">Loading stints...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="/" class="btn btn-secondary">
+        &larr; Back to Sessions
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const positionData = {{ position_data| tojson }};
+    const stintData = {{ stint_data| tojson }};
+
+    console.log('Position data:', positionData.length, 'points');
+    console.log('Stint data:', stintData.length, 'points');
+
+    // Position chart
+    const driverData = {};
+    positionData.forEach(row => {
+        if (!driverData[row.driver_id]) {
+            driverData[row.driver_id] = {
+                name: row.broadcast_name,
+                color: '#' + row.team_color,
+                data: []
+            };
+        }
+        driverData[row.driver_id].data.push({ x: row.lap_number, y: row.position });
+    });
+
+    const posDatasets = Object.entries(driverData).map(([id, driver]) => ({
+        label: id + ' - ' + driver.name,
+        data: driver.data,
+        borderColor: driver.color,
+        backgroundColor: driver.color,
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.1
+    }));
+
+    let posChart = null;
+    document.getElementById('progression-tab').addEventListener('shown.bs.tab', () => {
+        if (!posChart) {
+            posChart = new Chart(document.getElementById('positionChart'), {
+                type: 'line',
+                data: { datasets: posDatasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Lap' } },
+                        y: { reverse: true, title: { display: true, text: 'Position' }, min: 1, ticks: { stepSize: 1 } }
+                    },
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 15, font: { size: 10 } } } }
+                }
+            });
+        }
+    });
+
+    // Stint chart
+    const stintDriverData = {};
+    const driverOrder = [];
+    stintData.forEach(row => {
+        if (!stintDriverData[row.driver_id]) {
+            stintDriverData[row.driver_id] = { finish: row.finish_position || 999, laps: [] };
+            driverOrder.push(row.driver_id);
+        }
+        stintDriverData[row.driver_id].laps.push({
+            lap: row.lap_number,
+            stint: row.stint,
+            compound: row.compound
+        });
+    });
+
+    driverOrder.sort((a, b) => stintDriverData[a].finish - stintDriverData[b].finish);
+
+    const compoundColors = { HARD: '#2c3e50', MEDIUM: '#f1c40f', SOFT: '#e74c3c', INTERMEDIATE: '#27ae60', WET: '#3498db' };
+
+    const stintDatasets = [];
+    driverOrder.forEach((driverId, idx) => {
+        const yVal = driverOrder.length - idx;
+        const stints = {};
+        stintDriverData[driverId].laps.forEach(lap => {
+            if (!stints[lap.stint]) stints[lap.stint] = [];
+            stints[lap.stint].push(lap);
+        });
+
+        Object.entries(stints).forEach(([stintNum, laps]) => {
+            const compound = laps[0].compound;
+            const color = compoundColors[compound] || '#95a5a6';
+            stintDatasets.push({
+                label: driverId + ' S' + stintNum,
+                data: laps.map(l => ({ x: l.lap, y: yVal })),
+                borderColor: color,
+                backgroundColor: color,
+                showLine: true,
+                pointRadius: 4,
+                borderWidth: 3
+            });
+        });
+    });
+
+    // Stint Review JS
+    const allStintsData = [];
+    let stintLapTimeChart = null;
+
+    function formatLapTime(s) {
+        if (!s) return '-';
+        const m = Math.floor(s / 60);
+        const sec = (s % 60).toFixed(3);
+        return `${m}:${sec.padStart(6, '0')}`;
+    }
+
+    function populateStintsTable() {
+        allStintsData.length = 0;
+        const stintMap = {};
+
+        stintData.forEach(row => {
+            const key = `${row.driver_id}_${row.stint}`;
+            if (!stintMap[key]) {
+                stintMap[key] = {
+                    driverId: row.driver_id,
+                    driver: row.broadcast_name,
+                    teamColor: row.team_color,
+                    stintNumber: row.stint,
+                    compound: row.compound,
+                    laps: []
+                };
+                allStintsData.push(stintMap[key]);
+            }
+            if (row.lap_time_seconds && row.lap_time_seconds > 0) {
+                stintMap[key].laps.push({
+                    lapNumber: row.lap_number,
+                    lapTime: row.lap_time_seconds
+                });
+            }
+        });
+
+        // Calculate stats
+        allStintsData.forEach(stint => {
+            const times = stint.laps.map(l => l.lapTime);
+            if (times.length > 0) {
+                const avg = times.reduce((a, b) => a + b) / times.length;
+                const sorted = times.slice().sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+                const variance = times.reduce((sum, t) => sum + Math.pow(t - avg, 2), 0) / times.length;
+                const stdDev = Math.sqrt(variance);
+                const cv = (stdDev / avg) * 100;
+
+                stint.stats = { totalLaps: times.length, avgLapTime: avg, medianLapTime: median, consistency: cv };
+            } else {
+                stint.stats = { totalLaps: 0, avgLapTime: null, medianLapTime: null, consistency: 0 };
+            }
+        });
+
+        // Populate table
+        const tbody = document.getElementById('stintsTableBody');
+        tbody.innerHTML = '';
+        allStintsData.forEach(stint => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="badge" style="background-color: #${stint.teamColor};">${stint.driverId}</span></td>
+                <td>${stint.stintNumber}</td>
+                <td><span class="badge" style="background-color: ${compoundColors[stint.compound] || '#999'};">${stint.compound}</span></td>
+                <td>${stint.stats.totalLaps}</td>
+                <td>${formatLapTime(stint.stats.avgLapTime)}</td>
+                <td>${formatLapTime(stint.stats.medianLapTime)}</td>
+                <td>${stint.stats.consistency.toFixed(2)}%</td>
+                <td><button class="btn btn-sm btn-primary" onclick="selectStint('${stint.driverId}', ${stint.stintNumber})">View</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function selectStint(driverId, stintNumber) {
+        const stint = allStintsData.find(s => s.driverId === driverId && s.stintNumber === stintNumber);
+        if (!stint) return;
+
+        document.getElementById('stintDriver').innerHTML = `<span class="badge" style="background-color: #${stint.teamColor};">${stint.driver}</span>`;
+        document.getElementById('stintNumber').textContent = stint.stintNumber;
+        document.getElementById('stintCompound').innerHTML = `<span class="badge" style="background-color: ${compoundColors[stint.compound]};">${stint.compound}</span>`;
+        document.getElementById('stintLaps').textContent = stint.stats.totalLaps;
+        document.getElementById('stintAvg').textContent = formatLapTime(stint.stats.avgLapTime);
+        document.getElementById('stintMedian').textContent = formatLapTime(stint.stats.medianLapTime);
+        document.getElementById('stintConsistency').textContent = `${stint.stats.consistency.toFixed(2)}%`;
+
+        // Create chart
+        if (stintLapTimeChart) stintLapTimeChart.destroy();
+        stintLapTimeChart = new Chart(document.getElementById('stintLapTimeChart'), {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Lap Time',
+                    data: stint.laps.map(l => ({ x: l.lapNumber, y: l.lapTime })),
+                    borderColor: '#' + stint.teamColor,
+                    backgroundColor: '#' + stint.teamColor,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Lap Number' } },
+                    y: { title: { display: true, text: 'Lap Time (s)' }, ticks: { callback: v => formatLapTime(v) } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        document.getElementById('selectedStintDetails').style.display = 'block';
+        document.getElementById('allStintsList').style.display = 'none';
+    }
+
+    function clearSelectedStint() {
+        if (stintLapTimeChart) {
+            stintLapTimeChart.destroy();
+            stintLapTimeChart = null;
+        }
+        document.getElementById('selectedStintDetails').style.display = 'none';
+        document.getElementById('allStintsList').style.display = 'block';
+    }
+
+    let reviewInitialized = false;
+    document.getElementById('review-tab').addEventListener('shown.bs.tab', () => {
+        if (!reviewInitialized) {
+            populateStintsTable();
+            reviewInitialized = true;
+        }
+    });
+
+    let stintChart = null;
+    document.getElementById('stints-tab').addEventListener('shown.bs.tab', () => {
+        if (!stintChart) {
+            stintChart = new Chart(document.getElementById('stintChart'), {
+                type: 'scatter',
+                data: { datasets: stintDatasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Lap' } },
+                        y: {
+                            title: { display: true, text: 'Driver' }, min: 0.5, max: driverOrder.length + 0.5, ticks: {
+                                callback: v => driverOrder[driverOrder.length - Math.round(v)] || ''
+                            }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    });
+
+    // Pace chart
+    const lapTimes = {};
+    stintData.forEach(row => {
+        const lap = row.lap_number;
+        if (!lapTimes[lap]) lapTimes[lap] = [];
+        if (row.lap_time_seconds && row.lap_time_seconds > 0) {
+            lapTimes[lap].push(row.lap_time_seconds);
+        }
+    });
+
+    const paceData = [];
+    Object.keys(lapTimes).sort((a, b) => a - b).forEach(lap => {
+        const times = lapTimes[lap].sort((a, b) => a - b);
+        const mid = Math.floor(times.length / 2);
+        const median = times.length % 2 === 0 ? (times[mid - 1] + times[mid]) / 2 : times[mid];
+        paceData.push({ x: parseInt(lap), y: median });
+    });
+
+    let paceChart = null;
+    document.getElementById('pace-tab').addEventListener('shown.bs.tab', () => {
+        if (!paceChart) {
+            paceChart = new Chart(document.getElementById('paceChart'), {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Median Lap Time',
+                        data: paceData,
+                        borderColor: '#3498db',
+                        backgroundColor: '#3498db40',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Lap' } },
+                        y: {
+                            title: { display: true, text: 'Time (s)' }, ticks: {
+                                callback: v => Math.floor(v / 60) + ':' + (v % 60).toFixed(1).padStart(4, '0')
+                            }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

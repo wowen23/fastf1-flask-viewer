@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Lap {{ lap['lap_number'] }} - {{ driver['broadcast_name'] }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Sessions</a></li>
+        <li class="breadcrumb-item"><a href="/session/{{ session['session_id'] }}">{{ session['event_name'] }}</a></li>
+        <li class="breadcrumb-item"><a href="/driver/{{ session['session_id'] }}/{{ driver['driver_id'] }}">{{
+                driver['broadcast_name'] }}</a></li>
+        <li class="breadcrumb-item active">Lap {{ lap['lap_number'] }}</li>
+    </ol>
+</nav>
+
+<h1>Lap {{ lap['lap_number'] }} - {{ driver['broadcast_name'] }}</h1>
+<p class="text-muted">{{ session['event_name'] }} {{ session['session_type'] }}</p>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Lap Time</h5>
+                <p class="card-text display-6">
+                    {{ '%d:%06.3f' | format((lap['lap_time_seconds'] // 60)|int, lap['lap_time_seconds'] % 60) if
+                    lap['lap_time_seconds'] else 'N/A' }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sector 1</h5>
+                <p class="card-text display-6">{{ '%.3f' | format(lap['sector1_time_seconds']) if
+                    lap['sector1_time_seconds'] else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sector 2</h5>
+                <p class="card-text display-6">{{ '%.3f' | format(lap['sector2_time_seconds']) if
+                    lap['sector2_time_seconds'] else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sector 3</h5>
+                <p class="card-text display-6">{{ '%.3f' | format(lap['sector3_time_seconds']) if
+                    lap['sector3_time_seconds'] else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if telemetry %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Telemetry</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="telemetryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No telemetry data available for this lap.</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if telemetry %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const telemetryData = {{ telemetry| tojson }};
+
+    const distance = telemetryData.map(t => t.distance);
+    const speed = telemetryData.map(t => t.speed);
+    const throttle = telemetryData.map(t => t.throttle);
+    const brake = telemetryData.map(t => t.brake ? 100 : 0);
+
+    new Chart(document.getElementById('telemetryChart'), {
+        type: 'line',
+        data: {
+            labels: distance,
+            datasets: [
+                {
+                    label: 'Speed (km/h)',
+                    data: speed,
+                    borderColor: '#0d6efd',
+                    backgroundColor: '#0d6efd80',
+                    yAxisID: 'y',
+                    borderWidth: 2,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Throttle (%)',
+                    data: throttle,
+                    borderColor: '#198754',
+                    backgroundColor: '#19875480',
+                    yAxisID: 'y1',
+                    borderWidth: 2,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Brake',
+                    data: brake,
+                    borderColor: '#dc3545',
+                    backgroundColor: '#dc354580',
+                    yAxisID: 'y1',
+                    borderWidth: 2,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Distance (m)'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Speed (km/h)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Input (%)'
+                    },
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

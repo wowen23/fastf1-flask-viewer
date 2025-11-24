@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}FastF1 Data Viewer{% endblock %}
+
+{% block content %}
+<h1>FastF1 Data Viewer (Prototype)</h1>
+<p class="text-muted">Viewing F1 data from FastF1 API stored locally in SQLite</p>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Available Sessions</h3>
+            </div>
+            <div class="card-body">
+                {% if not sessions %}
+                <p class="text-muted">No sessions found in database.</p>
+                {% else %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Round</th>
+                            <th>Event</th>
+                            <th>Country</th>
+                            <th>Date</th>
+                            <th>Session</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>{{ session['year'] }}</td>
+                            <td>{{ session['round_number'] }}</td>
+                            <td><strong>{{ session['event_name'] }}</strong></td>
+                            <td>{{ session['country'] }}</td>
+                            <td>{{ session['session_date'][:10] }}</td>
+                            <td><span class="badge bg-success">{{ session['session_type'] }}</span></td>
+                            <td>
+                                <a href="/session/{{ session['session_id'] }}" class="btn btn-sm btn-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

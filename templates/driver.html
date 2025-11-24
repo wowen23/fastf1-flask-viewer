@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ driver['broadcast_name'] }} - Laps{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Sessions</a></li>
+        <li class="breadcrumb-item"><a href="/session/{{ session['session_id'] }}">{{ session['event_name'] }}</a></li>
+        <li class="breadcrumb-item active">{{ driver['broadcast_name'] }}</li>
+    </ol>
+</nav>
+
+<h1>{{ driver['broadcast_name'] }}</h1>
+<p class="text-muted">{{ driver['team_name'] }} - {{ session['event_name'] }} {{ session['session_type'] }}</p>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Lap Times</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Lap</th>
+                            <th>Time</th>
+                            <th>S1</th>
+                            <th>S2</th>
+                            <th>S3</th>
+                            <th>Compound</th>
+                            <th>Stint</th>
+                            <th>Position</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lap in laps %}
+                        <tr {% if lap['is_personal_best'] %}class="table-success" {% endif %}>
+                            <td><strong>{{ lap['lap_number'] }}</strong></td>
+                            <td>{{ '%d:%06.3f' | format((lap['lap_time_seconds'] // 60)|int, lap['lap_time_seconds'] %
+                                60) if lap['lap_time_seconds'] else '-' }}</td>
+                            <td>{{ '%.3f' | format(lap['sector1_time_seconds']) if lap['sector1_time_seconds'] else '-'
+                                }}</td>
+                            <td>{{ '%.3f' | format(lap['sector2_time_seconds']) if lap['sector2_time_seconds'] else '-'
+                                }}</td>
+                            <td>{{ '%.3f' | format(lap['sector3_time_seconds']) if lap['sector3_time_seconds'] else '-'
+                                }}</td>
+                            <td>
+                                {% if lap['compound'] %}
+                                <span
+                                    class="badge bg-{% if lap['compound'] == 'SOFT' %}danger{% elif lap['compound'] == 'MEDIUM' %}warning{% else %}secondary{% endif %}">
+                                    {{ lap['compound'] }}
+                                </span>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td>{{ lap['stint'] if lap['stint'] else '-' }}</td>
+                            <td>{{ lap['position']|int if lap['position'] else '-' }}</td>
+                            <td>
+                                <a href="/lap/{{ session['session_id'] }}/{{ driver['driver_id'] }}/{{ lap['lap_number'] }}"
+                                    class="btn btn-sm btn-info">
+                                    Telemetry
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
