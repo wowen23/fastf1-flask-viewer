@@ -285,161 +285,6 @@
                         </table>
                     </div>
                 </div>
-                <h4 class="mb-0">Race Progression - Position by Lap</h4>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="lapRange" class="form-label">View Laps:</label>
-                    <select id="lapRange" class="form-select form-select-sm"
-                        style="width: auto; display: inline-block;">
-                        <option value="all">All Laps</option>
-                        <option value="0-10">Laps 1-10</option>
-                        <option value="10-20">Laps 11-20</option>
-                        <option value="20-30">Laps 21-30</option>
-                        <option value="30-40">Laps 31-40</option>
-                        <option value="40-50">Laps 41-50</option>
-                        <option value="50-60">Laps 51-60</option>
-                        <option value="60-999">Laps 61+</option>
-                    </select>
-                </div>
-                <canvas id="positionChart" height="150"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stint Analysis Tab -->
-    <div class="tab-pane fade" id="stints" role="tabpanel">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0">Stint Analysis - Tire Strategy</h4>
-            </div>
-            <div class="card-body">
-                <canvas id="stintChart" height="150"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Global Race Pace Tab -->
-    <div class="tab-pane fade" id="pace" role="tabpanel">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Global Race Pace</h4>
-                <p class="mb-0 small">Median lap time across all drivers</p>
-            </div>
-            <div class="card-body">
-                <canvas id="paceChart" height="100"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stint Review Tab -->
-    <div class="tab-pane fade" id="review" role="tabpanel">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0"><i class="bi bi-clipboard-data"></i> Stint Review</h4>
-                <p class="mb-0 small">Click on a stint in Stint Analysis to review details, or browse all stints below
-                </p>
-            </div>
-            <div class="card-body">
-                <!-- Selected Stint Details -->
-                <div id="selectedStintDetails" style="display: none;">
-                    <div class="row mb-3">
-                        <div class="col">
-                            <button class="btn btn-sm btn-secondary" onclick="clearSelectedStint()">
-                                <i class="bi bi-arrow-left"></i> Back to All Stints
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Stint Information</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <th>Driver:</th>
-                                            <td id="stintDriver"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Stint Number:</th>
-                                            <td id="stintNumber"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Tire Compound:</th>
-                                            <td id="stintCompound"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Laps:</th>
-                                            <td id="stintLaps"></td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Performance Metrics</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-sm">
-                                        <tr>
-                                            <th>Average Lap Time:</th>
-                                            <td id="stintAvg"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Median Lap Time:</th>
-                                            <td id="stintMedian"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Consistency (CV%):</th>
-                                            <td id="stintConsistency"></td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Lap Time Evolution</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="stintLapTimeChart" height="80"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- All Stints List -->
-                <div id="allStintsList">
-                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                        <table class="table table-hover table-sm">
-                            <thead class="sticky-top bg-white">
-                                <tr>
-                                    <th>Driver</th>
-                                    <th>Stint #</th>
-                                    <th>Compound</th>
-                                    <th>Laps</th>
-                                    <th>Avg Lap Time</th>
-                                    <th>Median Lap Time</th>
-                                    <th>Consistency</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stintsTableBody">
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">Loading stints...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -716,6 +561,17 @@
         paceData.push({ x: parseInt(lap), y: median });
     });
 
+    // Calculate overall median to identify slow laps (e.g., SC/VSC)
+    const allMedians = paceData.map(d => d.y).sort((a, b) => a - b);
+    const midIdx = Math.floor(allMedians.length / 2);
+    const overallMedian = allMedians.length > 0 ? (allMedians.length % 2 === 0 ?
+        (allMedians[midIdx - 1] + allMedians[midIdx]) / 2 :
+        allMedians[midIdx]) : 0;
+
+    const slowThreshold = overallMedian * 1.20;
+    const pointColors = paceData.map(d => d.y > slowThreshold ? '#f1c40f' : '#3498db');
+    const pointRadii = paceData.map(d => d.y > slowThreshold ? 5 : 3);
+
     let paceChart = null;
     document.getElementById('pace-tab').addEventListener('shown.bs.tab', () => {
         if (!paceChart) {
@@ -727,6 +583,9 @@
                         data: paceData,
                         borderColor: '#3498db',
                         backgroundColor: '#3498db40',
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: pointColors,
+                        pointRadius: pointRadii,
                         borderWidth: 2,
                         fill: true
                     }]
@@ -734,14 +593,33 @@
                 options: {
                     responsive: true,
                     scales: {
-                        x: { title: { display: true, text: 'Lap' } },
+                        x: { type: 'linear', title: { display: true, text: 'Lap' } },
                         y: {
                             title: { display: true, text: 'Time (s)' }, ticks: {
                                 callback: v => Math.floor(v / 60) + ':' + (v % 60).toFixed(1).padStart(4, '0')
                             }
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const v = context.parsed.y;
+                                    const timeStr = Math.floor(v / 60) + ':' + (v % 60).toFixed(1).padStart(4, '0');
+                                    label += timeStr;
+                                    if (v > slowThreshold) {
+                                        label += ' (Slow/Yellow Flag)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
