@@ -285,203 +285,164 @@
                         </table>
                     </div>
                 </div>
+                <h4 class="mb-0">Race Progression - Position by Lap</h4>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="mt-3">
-    <a href="/" class="btn btn-secondary">
-        <div class="card-body">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Pos</th>
-                        <th>Driver</th>
-                        <th>Best Lap</th>
-                        <th>Avg</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stat in lap_stats %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td><strong>{{ stat['driver_id'] }}</strong></td>
-                        <td>{{ '%d:%06.3f' | format((stat['fastest_lap'] // 60)|int, stat['fastest_lap'] %
-                            60) }}</td>
-                        <td class="text-muted">{{ '%d:%06.3f' | format((stat['avg_lap'] // 60)|int,
-                            stat['avg_lap'] % 60) }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Race Progression Tab -->
-<div class="tab-pane fade" id="progression" role="tabpanel">
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Race Progression - Position by Lap</h4>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label for="lapRange" class="form-label">View Laps:</label>
-                <select id="lapRange" class="form-select form-select-sm" style="width: auto; display: inline-block;">
-                    <option value="all">All Laps</option>
-                    <option value="0-10">Laps 1-10</option>
-                    <option value="10-20">Laps 11-20</option>
-                    <option value="20-30">Laps 21-30</option>
-                    <option value="30-40">Laps 31-40</option>
-                    <option value="40-50">Laps 41-50</option>
-                    <option value="50-60">Laps 51-60</option>
-                    <option value="60-999">Laps 61+</option>
-                </select>
-            </div>
-            <canvas id="positionChart" height="150"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Stint Analysis Tab -->
-<div class="tab-pane fade" id="stints" role="tabpanel">
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0">Stint Analysis - Tire Strategy</h4>
-        </div>
-        <div class="card-body">
-            <canvas id="stintChart" height="150"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Global Race Pace Tab -->
-<div class="tab-pane fade" id="pace" role="tabpanel">
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Global Race Pace</h4>
-            <p class="mb-0 small">Median lap time across all drivers</p>
-        </div>
-        <div class="card-body">
-            <canvas id="paceChart" height="100"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Stint Review Tab -->
-<div class="tab-pane fade" id="review" role="tabpanel">
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h4 class="mb-0"><i class="bi bi-clipboard-data"></i> Stint Review</h4>
-            <p class="mb-0 small">Click on a stint in Stint Analysis to review details, or browse all stints below
-            </p>
-        </div>
-        <div class="card-body">
-            <!-- Selected Stint Details -->
-            <div id="selectedStintDetails" style="display: none;">
-                <div class="row mb-3">
-                    <div class="col">
-                        <button class="btn btn-sm btn-secondary" onclick="clearSelectedStint()">
-                            <i class="bi bi-arrow-left"></i> Back to All Stints
-                        </button>
-                    </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="lapRange" class="form-label">View Laps:</label>
+                    <select id="lapRange" class="form-select form-select-sm"
+                        style="width: auto; display: inline-block;">
+                        <option value="all">All Laps</option>
+                        <option value="0-10">Laps 1-10</option>
+                        <option value="10-20">Laps 11-20</option>
+                        <option value="20-30">Laps 21-30</option>
+                        <option value="30-40">Laps 31-40</option>
+                        <option value="40-50">Laps 41-50</option>
+                        <option value="50-60">Laps 51-60</option>
+                        <option value="60-999">Laps 61+</option>
+                    </select>
                 </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h5 class="mb-0">Stint Information</h5>
+                <canvas id="positionChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stint Analysis Tab -->
+    <div class="tab-pane fade" id="stints" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Stint Analysis - Tire Strategy</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="stintChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Race Pace Tab -->
+    <div class="tab-pane fade" id="pace" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Global Race Pace</h4>
+                <p class="mb-0 small">Median lap time across all drivers</p>
+            </div>
+            <div class="card-body">
+                <canvas id="paceChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stint Review Tab -->
+    <div class="tab-pane fade" id="review" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-clipboard-data"></i> Stint Review</h4>
+                <p class="mb-0 small">Click on a stint in Stint Analysis to review details, or browse all stints below
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Selected Stint Details -->
+                <div id="selectedStintDetails" style="display: none;">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <button class="btn btn-sm btn-secondary" onclick="clearSelectedStint()">
+                                <i class="bi bi-arrow-left"></i> Back to All Stints
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Stint Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Driver:</th>
+                                            <td id="stintDriver"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Stint Number:</th>
+                                            <td id="stintNumber"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tire Compound:</th>
+                                            <td id="stintCompound"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Laps:</th>
+                                            <td id="stintLaps"></td>
+                                        </tr>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <table class="table table-sm">
-                                    <tr>
-                                        <th>Driver:</th>
-                                        <td id="stintDriver"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Stint Number:</th>
-                                        <td id="stintNumber"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Tire Compound:</th>
-                                        <td id="stintCompound"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Laps:</th>
-                                        <td id="stintLaps"></td>
-                                    </tr>
-                                </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Performance Metrics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Average Lap Time:</th>
+                                            <td id="stintAvg"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Median Lap Time:</th>
+                                            <td id="stintMedian"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Consistency (CV%):</th>
+                                            <td id="stintConsistency"></td>
+                                        </tr>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h5 class="mb-0">Performance Metrics</h5>
-                            </div>
-                            <div class="card-body">
-                                <table class="table table-sm">
-                                    <tr>
-                                        <th>Average Lap Time:</th>
-                                        <td id="stintAvg"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Median Lap Time:</th>
-                                        <td id="stintMedian"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Consistency (CV%):</th>
-                                        <td id="stintConsistency"></td>
-                                    </tr>
-                                </table>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Lap Time Evolution</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="stintLapTimeChart" height="80"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Lap Time Evolution</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="stintLapTimeChart" height="80"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- All Stints List -->
-            <div id="allStintsList">
-                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-hover table-sm">
-                        <thead class="sticky-top bg-white">
-                            <tr>
-                                <th>Driver</th>
-                                <th>Stint #</th>
-                                <th>Compound</th>
-                                <th>Laps</th>
-                                <th>Avg Lap Time</th>
-                                <th>Median Lap Time</th>
-                                <th>Consistency</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stintsTableBody">
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">Loading stints...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- All Stints List -->
+                <div id="allStintsList">
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-hover table-sm">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>Driver</th>
+                                    <th>Stint #</th>
+                                    <th>Compound</th>
+                                    <th>Laps</th>
+                                    <th>Avg Lap Time</th>
+                                    <th>Median Lap Time</th>
+                                    <th>Consistency</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stintsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">Loading stints...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="mt-3">
