@@ -139,7 +139,7 @@ cursor.execute("""
 """, (
     session_id,
     YEAR,
-    session.event['RoundNumber'],
+    int(session.event['RoundNumber']),
     session.event['EventName'],
     session.event['Country'],
     session.event['Location'],
